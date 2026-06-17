@@ -1,0 +1,38 @@
+# Define the sample name based on your filenames
+SAMPLES = ["sample"]
+
+# The final files we want the pipeline to generate
+rule all:
+    input:
+        "../results/qc/sample_R1_fastqc.html",
+        "../data/filtered/sample_trimmed_R1.fastq.gz"
+
+# Step 1: Quality Control (FastQC)
+rule fastqc:
+    input:
+        r1 = "../data/raw/{sample}_R1.fastq.gz",
+        r2 = "../data/raw/{sample}_R2.fastq.gz"
+    output:
+        html1 = "../results/qc/{sample}_R1_fastqc.html",
+        html2 = "../results/qc/{sample}_R2_fastqc.html"
+    conda:
+        "envs/bio_env.yaml"
+    shell:
+        "fastqc {input.r1} {input.r2} -o ../results/qc/"
+
+# Step 2: Filtering Bad Reads (Trimmomatic)
+rule trim_reads:
+    input:
+        r1 = "../data/raw/{sample}_R1.fastq.gz",
+        r2 = "../data/raw/{sample}_R2.fastq.gz"
+    output:
+        r1_paired = "../data/filtered/{sample}_trimmed_R1.fastq.gz",
+        r1_unp = "../data/filtered/{sample}_unpaired_R1.fastq.gz",
+        r2_paired = "../data/filtered/{sample}_trimmed_R2.fastq.gz",
+        r2_unp = "../data/filtered/{sample}_unpaired_R2.fastq.gz"
+    conda:
+        "envs/bio_env.yaml"
+    shell:
+        "trimmomatic PE -phred33 {input.r1} {input.r2} "
+        "{output.r1_paired} {output.r1_unp} {output.r2_paired} {output.r2_unp} "
+        "LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36"
