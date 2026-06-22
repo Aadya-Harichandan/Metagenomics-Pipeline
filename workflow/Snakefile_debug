@@ -1,0 +1,24 @@
+import os
+
+PROJ_DIR = "/home/aadya/Metagenomics-Pipeline"
+
+rule all:
+    input:
+        os.path.join(PROJ_DIR, "results/taxonomy/sample_abundance.txt")
+
+rule metaphlan_isolated:
+    input:
+        r1 = os.path.join(PROJ_DIR, "data/filtered/sample_trimmed_R1.fastq.gz"),
+        r2 = os.path.join(PROJ_DIR, "data/filtered/sample_trimmed_R2.fastq.gz")
+    output:
+        profile = os.path.join(PROJ_DIR, "results/taxonomy/sample_abundance.txt")
+    conda:
+        "envs/humann_env.yaml"
+    shell:
+        "mkdir -p /home/aadya/Metagenomics-Pipeline/results/taxonomy && "
+        "metaphlan {input.r1},{input.r2} "
+        "--bowtie2out /home/aadya/Metagenomics-Pipeline/results/taxonomy/sample_abundance.txt.bowtie2.bz2 "
+        "--bowtie2db /home/aadya/Metagenomics-Pipeline/data/metaphlan_db "
+        "-x mpa_vJan25_CHOCOPhlAnSGB_202503 "
+        "--nproc 4 --input_type fastq --offline "
+        "-o {output.profile}"
